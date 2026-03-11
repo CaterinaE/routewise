@@ -1,12 +1,11 @@
-import { useMemo, useState } from "react";
-import { itinerariesByRoute } from "../data/sampleItineraries";
+import { useEffect, useMemo, useState } from "react";
 import ItineraryCard from "../components/results/ItineraryCard";
 import {
   calculateTotalTime,
   calculateTrueCost,
 } from "../domain/compute/totals";
 
-type RouteKey = keyof typeof itinerariesByRoute;
+type RouteKey = "london-paris" | "nice-paris";
 type SortMode = "cheapest" | "fastest";
 
 export default function App() {
@@ -15,7 +14,41 @@ export default function App() {
   const [checkedBag, setCheckedBag] = useState(false);
   const [seatSelection, setSeatSelection] = useState(false);
 
-  const itineraries = itinerariesByRoute[route];
+  const [date, setDate] = useState("2026-03-20");
+
+  const [itineraries, setItineraries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        setLoading(true);
+
+        const response = await fetch("http://localhost:8080/api/search", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            route,
+            date,
+            checkedBag,
+            seatSelection,
+          }),
+        });
+
+        const data = await response.json();
+        setItineraries(data.itineraries || []);
+      } catch (error) {
+        console.error("Failed to fetch itineraries:", error);
+        setItineraries([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    run();
+  }, [route, date, checkedBag, seatSelection]);
 
   const sorted = useMemo(() => {
     return [...itineraries].sort((a, b) => {
@@ -34,7 +67,11 @@ export default function App() {
   }, [itineraries, sortMode, checkedBag, seatSelection]);
 
   const fastestTime = useMemo(() => {
-    return Math.min(...itineraries.map((itinerary) => calculateTotalTime(itinerary)));
+    if (!itineraries.length) return 0;
+
+    return Math.min(
+      ...itineraries.map((itinerary) => calculateTotalTime(itinerary))
+    );
   }, [itineraries]);
 
   const routeLabel =
@@ -113,7 +150,8 @@ export default function App() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "minmax(220px, 1.3fr) minmax(220px, 1fr)",
+              gridTemplateColumns:
+                "minmax(220px, 1.2fr) minmax(220px, 1fr) minmax(180px, 0.9fr)",
               gap: "16px",
               alignItems: "end",
             }}
@@ -145,6 +183,33 @@ export default function App() {
                 <option value="london-paris">London → Paris</option>
                 <option value="nice-paris">Nice → Paris</option>
               </select>
+            </div>
+
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "10px",
+                  fontWeight: 700,
+                  color: "#0f172a",
+                }}
+              >
+                Date
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "14px 16px",
+                  borderRadius: "14px",
+                  border: "1px solid #cbd5e1",
+                  background: "#fff",
+                  fontSize: "16px",
+                  color: "#0f172a",
+                }}
+              />
             </div>
 
             <div>
@@ -287,8 +352,8 @@ export default function App() {
           }}
         >
           <div style={{ color: "#475569", fontSize: "15px" }}>
-            Showing <strong>{routeLabel}</strong> results sorted by{" "}
-            <strong>{sortMode}</strong>.
+            Showing <strong>{routeLabel}</strong> for <strong>{date}</strong>,
+            sorted by <strong>{sortMode}</strong>.
           </div>
 
           <div
@@ -305,18 +370,28 @@ export default function App() {
           </div>
         </div>
 
-        <div style={{ marginTop: "18px" }}>
-          {sorted.map((itinerary, index) => (
-            <ItineraryCard
-              key={itinerary.id}
-              itinerary={itinerary}
-              isBest={index === 0}
-              badgeLabel={sortMode === "cheapest" ? "Best Value" : "Fastest Option"}
-              extras={{ checkedBag, seatSelection }}
-              fastestTime={fastestTime}
-            />
-          ))}
-        </div>
+        {loading && (
+          <div style={{ marginTop: "18px", color: "#475569", fontWeight: 600 }}>
+            Loading travel options...
+          </div>
+        )}
+
+        {!loading && (
+          <div style={{ marginTop: "18px" }}>
+            {sorted.map((itinerary, index) => (
+              <ItineraryCard
+                key={itinerary.id}
+                itinerary={itinerary}
+                isBest={index === 0}
+                badgeLabel={
+                  sortMode === "cheapest" ? "Best Value" : "Fastest Option"
+                }
+                extras={{ checkedBag, seatSelection }}
+                fastestTime={fastestTime}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </main>
   );

@@ -33,6 +33,10 @@ export default function App() {
     });
   }, [itineraries, sortMode, checkedBag, seatSelection]);
 
+  const fastestTime = useMemo(() => {
+    return Math.min(...itineraries.map((itinerary) => calculateTotalTime(itinerary)));
+  }, [itineraries]);
+
   const routeLabel =
     route === "london-paris" ? "London → Paris" : "Nice → Paris";
 
@@ -309,6 +313,7 @@ export default function App() {
               isBest={index === 0}
               badgeLabel={sortMode === "cheapest" ? "Best Value" : "Fastest Option"}
               extras={{ checkedBag, seatSelection }}
+              fastestTime={fastestTime}
             />
           ))}
         </div>

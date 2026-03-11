@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { generateInsight } from "../../domain/compute/insights";
+
 import {
   calculateTrueCost,
   calculateTotalTime,
@@ -13,17 +14,20 @@ export default function ItineraryCard({
   isBest,
   badgeLabel,
   extras,
+  fastestTime,
 }: any) {
   const [open, setOpen] = useState(false);
 
   const totalCost = calculateTrueCost(itinerary, extras);
   const totalTime = calculateTotalTime(itinerary);
-  const insight = generateInsight(itinerary, totalTime);
+  const insight = generateInsight(itinerary, fastestTime);
 
   const addOnsTotal = getAddOnsTotal(itinerary, extras);
 
   const transfersAndAddOns =
-    itinerary.originAccessCost + itinerary.destinationAccessCost + addOnsTotal;
+    itinerary.originAccessCost +
+    itinerary.destinationAccessCost +
+    addOnsTotal;
 
   const hiddenCostScore = calculateHiddenCostScore(itinerary, extras);
   const hiddenCostLabel = getHiddenCostLabel(hiddenCostScore);
@@ -35,16 +39,16 @@ export default function ItineraryCard({
   };
 
   const scoreColor =
-    hiddenCostScore >= 60
+    hiddenCostScore >= 75
       ? "#b91c1c"
-      : hiddenCostScore >= 30
+      : hiddenCostScore >= 40
       ? "#b45309"
       : "#15803d";
 
   const scoreBackground =
-    hiddenCostScore >= 60
+    hiddenCostScore >= 75
       ? "#fee2e2"
-      : hiddenCostScore >= 30
+      : hiddenCostScore >= 40
       ? "#fef3c7"
       : "#dcfce7";
 
@@ -60,8 +64,8 @@ export default function ItineraryCard({
         padding: "20px",
         marginTop: "18px",
         boxShadow: isBest
-          ? "0 12px 30px rgba(79, 70, 229, 0.10)"
-          : "0 8px 24px rgba(15, 23, 42, 0.06)",
+          ? "0 12px 30px rgba(79,70,229,0.10)"
+          : "0 8px 24px rgba(15,23,42,0.06)",
       }}
     >
       {isBest && (
@@ -145,13 +149,7 @@ export default function ItineraryCard({
         </div>
 
         <div style={{ textAlign: "right" }}>
-          <div
-            style={{
-              fontSize: "30px",
-              fontWeight: 800,
-              color: "#111827",
-            }}
-          >
+          <div style={{ fontSize: "30px", fontWeight: 800 }}>
             £{totalCost}
           </div>
           <div style={{ color: "#475569", fontWeight: 600 }}>
@@ -172,8 +170,8 @@ export default function ItineraryCard({
             fontWeight: 700,
           }}
         >
-          ⚠ Remote airport — {itinerary.destinationAccessTime} min transfer to city
-          centre
+          ⚠ {itinerary.destination} is {itinerary.destinationAccessTime} min
+          from the city centre
         </div>
       )}
 
@@ -185,53 +183,9 @@ export default function ItineraryCard({
           marginTop: "20px",
         }}
       >
-        <div
-          style={{
-            padding: "14px",
-            borderRadius: "14px",
-            background: "#f8fafc",
-            border: "1px solid #e2e8f0",
-          }}
-        >
-          <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "6px" }}>
-            Total travel time
-          </div>
-          <div style={{ fontSize: "20px", fontWeight: 700 }}>
-            {formatDuration(totalTime)}
-          </div>
-        </div>
-
-        <div
-          style={{
-            padding: "14px",
-            borderRadius: "14px",
-            background: "#f8fafc",
-            border: "1px solid #e2e8f0",
-          }}
-        >
-          <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "6px" }}>
-            Ticket price
-          </div>
-          <div style={{ fontSize: "20px", fontWeight: 700 }}>
-            £{itinerary.ticketPrice}
-          </div>
-        </div>
-
-        <div
-          style={{
-            padding: "14px",
-            borderRadius: "14px",
-            background: "#f8fafc",
-            border: "1px solid #e2e8f0",
-          }}
-        >
-          <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "6px" }}>
-            Transfers + add-ons
-          </div>
-          <div style={{ fontSize: "20px", fontWeight: 700 }}>
-            £{transfersAndAddOns}
-          </div>
-        </div>
+        <Stat label="Total travel time" value={formatDuration(totalTime)} />
+        <Stat label="Ticket price" value={`£${itinerary.ticketPrice}`} />
+        <Stat label="Transfers + add-ons" value={`£${transfersAndAddOns}`} />
 
         <div
           style={{
@@ -241,40 +195,35 @@ export default function ItineraryCard({
             border: "1px solid #e2e8f0",
           }}
         >
-          <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "6px" }}>
+          <div style={{ fontSize: "12px", color: "#64748b" }}>
             Hidden cost score
           </div>
-          <div
-            style={{
-              fontSize: "20px",
-              fontWeight: 800,
-              color: scoreColor,
-            }}
-          >
+
+          <div style={{ fontSize: "20px", fontWeight: 800, color: scoreColor }}>
             {hiddenCostScore}/100
           </div>
-          <div style={{ marginTop: "4px", color: scoreColor, fontWeight: 700 }}>
+
+          <div style={{ color: scoreColor, fontWeight: 700 }}>
             {hiddenCostLabel}
           </div>
         </div>
       </div>
 
-      <div
-        style={{
-          marginTop: "16px",
-          padding: "14px 16px",
-          borderRadius: "14px",
-          background: "#eef2ff",
-          border: "1px solid #c7d2fe",
-          color: "#3730a3",
-          fontWeight: 600,
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-        }}
-      >
-        💡 <span>{insight}</span>
-      </div>
+      {insight && (
+        <div
+          style={{
+            marginTop: "16px",
+            padding: "14px",
+            borderRadius: "14px",
+            background: "#eef2ff",
+            border: "1px solid #c7d2fe",
+            color: "#3730a3",
+            fontWeight: 600,
+          }}
+        >
+          💡 {insight}
+        </div>
+      )}
 
       <div
         style={{
@@ -282,8 +231,6 @@ export default function ItineraryCard({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          gap: "12px",
-          flexWrap: "wrap",
         }}
       >
         <div style={{ color: "#475569" }}>
@@ -295,7 +242,6 @@ export default function ItineraryCard({
           style={{
             border: "1px solid #cbd5e1",
             background: "#fff",
-            color: "#0f172a",
             borderRadius: "12px",
             padding: "10px 14px",
             fontWeight: 600,
@@ -312,52 +258,125 @@ export default function ItineraryCard({
             marginTop: "18px",
             paddingTop: "18px",
             borderTop: "1px solid #e2e8f0",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+            gap: "24px",
           }}
         >
-          <h4 style={{ marginTop: 0, marginBottom: "16px" }}>Cost breakdown</h4>
+          <CostBreakdown
+            itinerary={itinerary}
+            addOnsTotal={addOnsTotal}
+            totalCost={totalCost}
+          />
 
-          <div
-            style={{
-              display: "grid",
-              gap: "10px",
-              maxWidth: "420px",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Ticket</span>
-              <span>£{itinerary.ticketPrice}</span>
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Origin transfer</span>
-              <span>£{itinerary.originAccessCost}</span>
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Destination transfer</span>
-              <span>£{itinerary.destinationAccessCost}</span>
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Add-ons</span>
-              <span>£{addOnsTotal}</span>
-            </div>
-
-            <div
-              style={{
-                borderTop: "1px solid #e2e8f0",
-                paddingTop: "10px",
-                display: "flex",
-                justifyContent: "space-between",
-                fontWeight: 800,
-              }}
-            >
-              <span>Total</span>
-              <span>£{totalCost}</span>
-            </div>
-          </div>
+          <JourneyTimeline
+            itinerary={itinerary}
+            totalTime={totalTime}
+            formatDuration={formatDuration}
+          />
         </div>
       )}
     </article>
+  );
+}
+
+function Stat({ label, value }: any) {
+  return (
+    <div
+      style={{
+        padding: "14px",
+        borderRadius: "14px",
+        background: "#f8fafc",
+        border: "1px solid #e2e8f0",
+      }}
+    >
+      <div style={{ fontSize: "12px", color: "#64748b" }}>{label}</div>
+      <div style={{ fontSize: "20px", fontWeight: 700 }}>{value}</div>
+    </div>
+  );
+}
+
+function CostBreakdown({ itinerary, addOnsTotal, totalCost }: any) {
+  return (
+    <div>
+      <h4>Cost breakdown</h4>
+
+      <Row label="Ticket" value={`£${itinerary.ticketPrice}`} />
+      <Row label="Origin transfer" value={`£${itinerary.originAccessCost}`} />
+      <Row
+        label="Destination transfer"
+        value={`£${itinerary.destinationAccessCost}`}
+      />
+      <Row label="Add-ons" value={`£${addOnsTotal}`} />
+
+      <div
+        style={{
+          borderTop: "1px solid #e2e8f0",
+          marginTop: "8px",
+          paddingTop: "10px",
+          display: "flex",
+          justifyContent: "space-between",
+          fontWeight: 800,
+        }}
+      >
+        <span>Total</span>
+        <span>£{totalCost}</span>
+      </div>
+    </div>
+  );
+}
+
+function JourneyTimeline({ itinerary, totalTime, formatDuration }: any) {
+  return (
+    <div>
+      <h4>Journey timeline</h4>
+
+      <TimelineItem
+        icon="🚆"
+        label={itinerary.originTransferLabel}
+        time={itinerary.originAccessTime}
+      />
+
+      <TimelineItem
+        icon={itinerary.mode === "FLIGHT" ? "🛫" : "🚉"}
+        label={`${itinerary.origin} → ${itinerary.destination}`}
+        time={itinerary.travelTime}
+      />
+
+      <TimelineItem
+        icon="🚌"
+        label={itinerary.destinationTransferLabel}
+        time={itinerary.destinationAccessTime}
+      />
+
+      <div style={{ marginTop: "12px", color: "#475569", fontWeight: 600 }}>
+        Door-to-door total: {formatDuration(totalTime)}
+      </div>
+    </div>
+  );
+}
+
+function TimelineItem({ icon, label, time }: any) {
+  return (
+    <div
+      style={{
+        padding: "12px 14px",
+        borderRadius: "12px",
+        background: "#f8fafc",
+        border: "1px solid #e2e8f0",
+        marginBottom: "10px",
+      }}
+    >
+      {icon} {label} — {time} min
+    </div>
+  );
+}
+
+function Row({ label, value }: any) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between" }}>
+      <span>{label}</span>
+      <span>{value}</span>
+    </div>
   );
 }

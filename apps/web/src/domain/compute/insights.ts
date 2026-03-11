@@ -1,20 +1,27 @@
 import { calculateTotalTime } from "./totals";
 
-export function generateInsight(itinerary: any, fastestTime: number): string {
+export function generateInsight(
+  itinerary: any,
+  fastestTime: number
+): string | null {
+
   const totalTime = calculateTotalTime(itinerary);
-  const timeDifference = totalTime - fastestTime;
+  const diff = totalTime - fastestTime;
 
-  if (itinerary.mode === "FLIGHT" && itinerary.destinationAccessTime > 60) {
-    return "Remote airport adds significant travel time.";
-  }
+  if (diff > 0) {
+    const hours = Math.floor(diff / 60);
+    const mins = diff % 60;
 
-  if (timeDifference > 90) {
-    return "This option is significantly slower than alternatives.";
+    if (hours > 0) {
+      return `⚡ ${hours}h ${mins}m slower than the fastest option`;
+    }
+
+    return `⚡ ${mins} min slower than the fastest option`;
   }
 
   if (itinerary.mode === "TRAIN") {
-    return "Arrives directly in the city centre.";
+    return "🚆 Direct city-centre arrival";
   }
 
-  return "Balanced travel option.";
+  return null;
 }

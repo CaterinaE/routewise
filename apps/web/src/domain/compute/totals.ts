@@ -30,14 +30,15 @@ export function calculateHiddenCostScore(itinerary: any, extras: any = {}) {
   if (itinerary.destinationAccessTime > 60) score += 30;
   if (itinerary.originAccessTime > 40) score += 15;
   if (itinerary.bufferTime > 90) score += 15;
-  if (extras?.checkedBag && itinerary.mode === "FLIGHT") score += 20;
-  if (extras?.seatSelection && itinerary.mode === "FLIGHT") score += 10;
+
+  if (extras.checkedBag && itinerary.mode === "FLIGHT") score += 20;
+  if (extras.seatSelection && itinerary.mode === "FLIGHT") score += 10;
 
   return Math.min(score, 100);
 }
 
 export function getHiddenCostLabel(score: number) {
-  if (score >= 60) return "High hidden cost";
-  if (score >= 30) return "Moderate hidden cost";
+  if (score >= 75) return "High hidden cost";
+  if (score >= 40) return "Moderate hidden cost";
   return "Low hidden cost";
 }

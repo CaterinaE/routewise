@@ -22,7 +22,7 @@ searchRouter.post("/", async (req, res) => {
   } catch (error: any) {
     console.error(error);
     res.status(500).json({
-      error: "Failed to fetch live itineraries",
+      error: "Failed to fetch flights",
       detail: error?.message || "Unknown error",
     });
   }

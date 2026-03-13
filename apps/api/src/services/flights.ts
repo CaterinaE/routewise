@@ -1,83 +1,46 @@
 import { env } from "../utils/env";
 
-type SearchFlightsInput = {
-  originIata: string;
-  destinationIata: string;
-  date: string; // YYYY-MM-DD
+type FlightSearchInput = {
+  origin: string;
+  destination: string;
+  date: string;
 };
 
-function toDateParts(date: string) {
-  const [year, month, day] = date.split("-").map(Number);
-  return { year, month, day };
-}
+async function runSearch(input: FlightSearchInput) {
+  const url = new URL("https://www.searchapi.io/api/v1/search");
 
-export async function createSkyscannerSearch(input: SearchFlightsInput) {
-  const { year, month, day } = toDateParts(input.date);
+  url.searchParams.set("engine", "google_flights");
+  url.searchParams.set("flight_type", "one_way");
+  url.searchParams.set("departure_id", input.origin);
+  url.searchParams.set("arrival_id", input.destination);
+  url.searchParams.set("outbound_date", input.date);
+  url.searchParams.set("currency", "GBP");
+  url.searchParams.set("hl", "en");
+  url.searchParams.set("api_key", env.searchApiKey);
 
-  const response = await fetch(
-    "https://partners.api.skyscanner.net/apiservices/v3/flights/live/search/create",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": env.skyscannerApiKey,
-      },
-      body: JSON.stringify({
-        query: {
-          market: "UK",
-          locale: "en-GB",
-          currency: "GBP",
-          queryLegs: [
-            {
-              originPlaceId: { iata: input.originIata },
-              destinationPlaceId: { iata: input.destinationIata },
-              date: { year, month, day },
-            },
-          ],
-          adults: 1,
-          cabinClass: "CABIN_CLASS_ECONOMY",
-        },
-      }),
-    }
-  );
+  const response = await fetch(url.toString());
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`Skyscanner create failed: ${response.status} ${text}`);
+    throw new Error(`Flight search failed: ${response.status} ${text}`);
   }
 
-  return response.json();
+  const data: any = await response.json();
+
+  if (data.error) {
+    console.log(`No results for ${input.origin} -> ${input.destination}:`, data.error);
+    return [];
+  }
+
+  return [...(data.best_flights || []), ...(data.other_flights || [])];
 }
 
-export async function pollSkyscannerSearch(sessionToken: string) {
-  const response = await fetch(
-    `https://partners.api.skyscanner.net/apiservices/v3/flights/live/search/poll/${sessionToken}`,
-    {
-      method: "POST",
-      headers: {
-        "x-api-key": env.skyscannerApiKey,
-      },
-    }
-  );
+export async function searchFlights(date: string) {
+  const searches = await Promise.all([
+    runSearch({ origin: "LHR", destination: "CDG", date }),
+    runSearch({ origin: "LGW", destination: "ORY", date }),
+    runSearch({ origin: "STN", destination: "BVA", date }),
+  ]);
 
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Skyscanner poll failed: ${response.status} ${text}`);
-  }
-
-  return response.json();
-}
-
-export async function searchFlightsLive(input: SearchFlightsInput) {
-  const created = await createSkyscannerSearch(input);
-  const sessionToken = created?.sessionToken;
-
-  if (!sessionToken) {
-    throw new Error("No Skyscanner sessionToken returned");
-  }
-
-  // Simple MVP: poll once or twice
-  const poll1 = await pollSkyscannerSearch(sessionToken);
-
-  return poll1;
+  return searches.flat();
 }

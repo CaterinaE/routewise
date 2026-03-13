@@ -17,7 +17,7 @@ export async function getTransitTransfer(input: TransferInput) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Goog-Api-Key": env.googleMapsApiKey,
+        "X-Goog-Api-Key": env.googleMapsKey,
         "X-Goog-FieldMask":
           "routes.duration,routes.travelAdvisory.transitFare,routes.legs.steps.transitDetails",
       },

@@ -1,4 +1,4 @@
 export const env = {
-    skyscannerApiKey: process.env.SKYSCANNER_API_KEY || "",
-    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || "",
+    searchApiKey: process.env.SEARCHAPI_API_KEY || "",
+    googleMapsKey: process.env.GOOGLE_MAPS_API_KEY || "",
   };

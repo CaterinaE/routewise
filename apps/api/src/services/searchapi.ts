@@ -5,7 +5,18 @@ type SearchFlightsInput = {
   destinationIata: string;
   date: string;
 };
+function ensureFutureDate(date: string) {
+  const input = new Date(date);
+  const today = new Date();
 
+  if (input < today) {
+    const future = new Date();
+    future.setDate(future.getDate() + 7); // +7 days
+    return future.toISOString().split("T")[0];
+  }
+
+  return date;
+}
 export async function searchFlightsLive(input: SearchFlightsInput) {
   const url = new URL("https://www.searchapi.io/api/v1/search");
 

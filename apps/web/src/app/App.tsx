@@ -14,8 +14,9 @@ export default function App() {
   const [checkedBag, setCheckedBag] = useState(false);
   const [seatSelection, setSeatSelection] = useState(false);
 
-  const [date, setDate] = useState("2026-03-20");
+  const today = new Date().toISOString().split("T")[0];
 
+  const [date, setDate] = useState(today);
   const [itineraries, setItineraries] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -38,8 +39,8 @@ export default function App() {
         });
 
         const data = await response.json();
-        setItineraries(data.itineraries || []);
-      } catch (error) {
+        console.log("API RESPONSE:", data);  setItineraries(data);
+          } catch (error) {
         console.error("Failed to fetch itineraries:", error);
         setItineraries([]);
       } finally {
@@ -197,19 +198,20 @@ export default function App() {
                 Date
               </label>
               <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "14px 16px",
-                  borderRadius: "14px",
-                  border: "1px solid #cbd5e1",
-                  background: "#fff",
-                  fontSize: "16px",
-                  color: "#0f172a",
-                }}
-              />
+  type="date"
+  value={date}
+  min={today}
+  onChange={(e) => setDate(e.target.value)}
+  style={{
+    width: "100%",
+    padding: "14px 16px",
+    borderRadius: "14px",
+    border: "1px solid #cbd5e1",
+    background: "#fff",
+    fontSize: "16px",
+    color: "#0f172a",
+  }}
+/>
             </div>
 
             <div>

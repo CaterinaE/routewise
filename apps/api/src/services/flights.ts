@@ -36,11 +36,12 @@ async function runSearch(input: FlightSearchInput) {
 }
 
 export async function searchFlights(date: string) {
-  const searches = await Promise.all([
-    runSearch({ origin: "LHR", destination: "CDG", date }),
-    runSearch({ origin: "LGW", destination: "ORY", date }),
-    runSearch({ origin: "STN", destination: "BVA", date }),
-  ]);
-
-  return searches.flat();
-}
+    const searches = await Promise.all([
+      runSearch({ origin: "LHR", destination: "CDG", date }),
+      runSearch({ origin: "LGW", destination: "ORY", date }),
+      runSearch({ origin: "LHR", destination: "ORY", date }),
+      runSearch({ origin: "LGW", destination: "CDG", date }),
+    ]);
+  
+    return searches.flat();
+  } 

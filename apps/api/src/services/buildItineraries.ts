@@ -35,68 +35,27 @@ export async function buildItineraries(input: BuildInput) {
 
   const flights = await searchFlights(input.date);
 
-  return flights.map((flight: any, index: number) => {
-    const firstLeg = flight.flights?.[0];
-    const lastLeg = flight.flights?.[flight.flights.length - 1];
-
-    const departureAirport = firstLeg?.departure_airport?.name || "Departure airport";
-    const arrivalAirport = lastLeg?.arrival_airport?.name || "Arrival airport";
-
-    let originAccessCost = 20;
-    let originAccessTime = 50;
-    let destinationAccessCost = 15;
-    let destinationAccessTime = 45;
-
-    if (departureAirport.includes("Heathrow")) {
-      originAccessCost = 12;
-      originAccessTime = 35;
-    }
-
-    if (departureAirport.includes("Gatwick")) {
-      originAccessCost = 18;
-      originAccessTime = 45;
-    }
-
-    if (departureAirport.includes("Stansted")) {
-      originAccessCost = 20;
-      originAccessTime = 50;
-    }
-
-    if (arrivalAirport.includes("Beauvais")) {
-      destinationAccessCost = 17;
-      destinationAccessTime = 70;
-    }
-
-    if (arrivalAirport.includes("Orly")) {
-      destinationAccessCost = 12;
-      destinationAccessTime = 40;
-    }
-
-    if (arrivalAirport.includes("Charles de Gaulle")) {
-      destinationAccessCost = 11;
-      destinationAccessTime = 45;
-    }
-
-    console.log("flight.total_duration:", flight.total_duration);
-
+  const mappedFlights = flights.map((flight: any, index: number) => {
     return {
       id: `flight-${index}`,
-      operator: flight.airline || "Flight",
-      mode: "FLIGHT",
-      origin: departureAirport,
-      destination: arrivalAirport,
-      originTransferLabel: `King's Cross → ${departureAirport}`,
-      originTransferMethod: "Rail / Tube",
-      destinationTransferLabel: `${arrivalAirport} → Châtelet–Les Halles`,
-      destinationTransferMethod: "Transit",
-      ticketPrice: Number(flight.price || 0),
-      originAccessCost,
-      destinationAccessCost,
-      addOnFees,
-      originAccessTime,
+      operator: "Flight",
+      mode: "FLIGHT", 
+      origin: flight.flights?.[0]?.departure_airport?.name || "Unknown",
+      destination: flight.flights?.[0]?.arrival_airport?.name || "Unknown",
+      travelTime: flight.total_duration || 0, 
+      ticketPrice: flight.price || 0,
+      originAccessCost: 12,
+      destinationAccessCost: 11,
+      originAccessTime: 35,
       bufferTime: 120,
-      travelTime: parseDurationToMinutes(flight.total_duration),
-      destinationAccessTime,
+      destinationAccessTime: 45,
     };
   });
+  const cleanedFlights = mappedFlights
+    .filter((f) => f.ticketPrice > 0)
+    .filter((f) => f.travelTime > 0 && f.travelTime <= 180)
+    .sort((a, b) => a.ticketPrice - b.ticketPrice)
+    .slice(0, 8);
+    console.log("Mapped flights:", mappedFlights.slice(0, 3));
+  return cleanedFlights;
 }

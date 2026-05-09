@@ -38,11 +38,19 @@ export default function App() {
           }),
         });
 
+            
         const data = await response.json();
-        console.log("API RESPONSE:", data);  setItineraries(data);
-          } catch (error) {
-        console.error("Failed to fetch itineraries:", error);
-        setItineraries([]);
+
+console.log("API RESPONSE:", data);
+
+if (Array.isArray(data)) {
+  setItineraries(data);
+} else if (Array.isArray(data.itineraries)) {
+  setItineraries(data.itineraries);
+} else {
+  console.error("API ERROR:", data);
+  setItineraries([]);
+}
       } finally {
         setLoading(false);
       }

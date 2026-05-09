@@ -26,7 +26,7 @@ async function runSearch(input: FlightSearchInput) {
   }
 
   const data: any = await response.json();
-
+  console.log(JSON.stringify(data.best_flights?.[0], null, 2));
   if (data.error) {
     console.log(`No results for ${input.origin} -> ${input.destination}:`, data.error);
     return [];
